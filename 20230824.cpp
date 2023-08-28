@@ -618,8 +618,6 @@ Point intersectionPoint(const Segment &left, const Segment &right)
     return Point(x, y);
 }
 
-
-
 int main()
 {
     return 0;
