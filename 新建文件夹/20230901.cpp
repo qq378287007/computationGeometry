@@ -48,7 +48,7 @@ struct Point
         : x(mX), y(mY), pos(mPos) {}
 };
 
-bool equalPoint(Point a, Point b, double error = 0.00001)
+bool equalPoint(Point a, Point b, double error = 1.0e-6)
 {
     return equal(a.x, b.x, error) && equal(a.y, b.y, error);
 }
@@ -85,6 +85,7 @@ struct SegmentLine
         for (int i = 0, j = ip.size() - 1; i < j; i++, j--)
             swapPoint(ip[i], ip[j]);
     }
+
     virtual Point centerPoint() const
     {
         return Point((sp.x + ep.x) * 0.5, (sp.y + ep.y) * 0.5);
@@ -105,6 +106,7 @@ struct SegmentLine
             lines.emplace_back(make_shared<SegmentLine>(vp[i], vp[i + 1]));
         return lines;
     }
+
     virtual void addPoint(double x, double y)
     {
         Point p{x, y, ON};
@@ -245,10 +247,43 @@ struct ArcLine : SegmentLine
         }
 
         const int n = ip.size();
-        const double angle = anglePoint(cp, p);
         int index = 0;
-        while (index < n && anglePoint(cp, ip[index]) < angle)
-            index++;
+        double angle = anglePoint(cp, p);
+        if (anticlockwise)
+        {
+            while (angle < 0.0)
+                angle += M_PI;
+        }
+        else
+        {
+            while (angle > 0.0)
+                angle -= M_PI;
+        }
+
+        while (index < n)
+        {
+            double cur_angle = anglePoint(cp, ip[index]);
+
+            if (anticlockwise)
+            {
+                while (cur_angle < 0.0)
+                    cur_angle += M_PI;
+                if (cur_angle < angle)
+                    index++;
+                else
+                    break;
+            }
+            else
+            {
+                while (cur_angle > 0.0)
+                    cur_angle -= M_PI;
+                if (cur_angle > angle)
+                    index++;
+                else
+                    break;
+            }
+        }
+
         ip.insert(ip.cbegin() + index, p);
     }
 
